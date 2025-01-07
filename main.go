@@ -1,25 +1,24 @@
 package main
 
 import (
-	"dragon/profile"
-	"dragon/wallet"
-	"fmt"
+	"dragon/config"
+	"dragon/models"
+	"dragon/routers"
+	"log"
+	"net/http"
 )
 
 func main() {
-	fmt.Println("Starting the Game Project")
+	// Kết nối database
+	db := config.ConnectDB()
 
-	// Example usage of wallet functionality
-	w := wallet.NewVirtualWallet()
-	err := w.Connect()
-	if err != nil {
-		fmt.Printf("Error connecting virtual wallet: %v\n", err)
-	} else {
-		fmt.Println("Virtual wallet connected successfully")
-	}
+	// Tự động tạo bảng
+	models.AutoMigrate(db)
 
-	// Example usage of profile functionality
-	p := profile.NewProfile("JohnDoe", 1)
-	p.SetLevel(5)
-	fmt.Printf("Player Profile: %v\n", p)
+	// Định nghĩa router
+	router := routers.SetupRouter(db)
+
+	// Chạy server
+	log.Println("Server is running on port 8080")
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
