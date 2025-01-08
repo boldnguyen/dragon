@@ -16,6 +16,10 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/api/wallet/connect", func(w http.ResponseWriter, r *http.Request) {
 		handlers.ConnectWallet(db, w, r)
 	}).Methods("POST")
+	// Endpoint nạp tiền vào ví
+	router.HandleFunc("/api/wallet/deposit", func(w http.ResponseWriter, r *http.Request) {
+		handlers.DepositFunds(db, w, r)
+	}).Methods("POST")
 
 	// Endpoint đồng bộ tài sản
 	router.HandleFunc("/api/wallet/sync", func(w http.ResponseWriter, r *http.Request) {
@@ -86,6 +90,16 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/api/chat/group/member/remove", func(w http.ResponseWriter, r *http.Request) {
 		handlers.RemoveMemberFromChatGroup(db, w, r)
 	}).Methods("DELETE")
+
+	// Endpoint lấy danh sách vật phẩm
+	router.HandleFunc("/api/store/items", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetItems(db, w, r)
+	}).Methods("GET")
+
+	// Endpoint mua vật phẩm
+	router.HandleFunc("/api/store/buy", func(w http.ResponseWriter, r *http.Request) {
+		handlers.BuyItem(db, w, r)
+	}).Methods("POST")
 
 	return router
 }
