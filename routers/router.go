@@ -57,5 +57,35 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 		handlers.SendGift(db, w, r)
 	}).Methods("POST")
 
+	// Endpoint gửi tin nhắn
+	router.HandleFunc("/api/message/send", func(w http.ResponseWriter, r *http.Request) {
+		handlers.SendMessage(db, w, r)
+	}).Methods("POST")
+
+	// Endpoint lấy tin nhắn
+	router.HandleFunc("/api/message/get", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetMessages(db, w, r)
+	}).Methods("GET")
+
+	// Thêm nhóm chat
+	router.HandleFunc("/api/chat/group/create", func(w http.ResponseWriter, r *http.Request) {
+		handlers.CreateChatGroup(db, w, r)
+	}).Methods("POST")
+
+	// Thêm thành viên vào nhóm
+	router.HandleFunc("/api/chat/group/member/add", func(w http.ResponseWriter, r *http.Request) {
+		handlers.AddMemberToChatGroup(db, w, r)
+	}).Methods("POST")
+
+	// Lấy danh sách thành viên nhóm
+	router.HandleFunc("/api/chat/group/member/list", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetChatGroupMembers(db, w, r)
+	}).Methods("GET")
+
+	// Xóa thành viên khỏi nhóm
+	router.HandleFunc("/api/chat/group/member/remove", func(w http.ResponseWriter, r *http.Request) {
+		handlers.RemoveMemberFromChatGroup(db, w, r)
+	}).Methods("DELETE")
+
 	return router
 }
