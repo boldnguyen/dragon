@@ -32,5 +32,30 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 		handlers.GetProfile(db, w, r)
 	}).Methods("GET")
 
+	// Thêm bạn bè
+	router.HandleFunc("/api/friend/add", func(w http.ResponseWriter, r *http.Request) {
+		handlers.AddFriend(db, w, r)
+	}).Methods("POST")
+
+	// Endpoint chấp nhận bạn bè
+	router.HandleFunc("/api/friend/accept", func(w http.ResponseWriter, r *http.Request) {
+		handlers.AcceptFriend(db, w, r)
+	}).Methods("POST")
+
+	// Xóa bạn bè
+	router.HandleFunc("/api/friend/remove", func(w http.ResponseWriter, r *http.Request) {
+		handlers.RemoveFriend(db, w, r)
+	}).Methods("DELETE")
+
+	// Lấy danh sách bạn bè
+	router.HandleFunc("/api/friend/list", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetFriends(db, w, r)
+	}).Methods("GET")
+
+	// Gửi quà
+	router.HandleFunc("/api/friend/gift", func(w http.ResponseWriter, r *http.Request) {
+		handlers.SendGift(db, w, r)
+	}).Methods("POST")
+
 	return router
 }
