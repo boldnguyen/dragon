@@ -3,9 +3,6 @@ package models
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"log"
-
-	"gorm.io/gorm"
 )
 
 // StringArray là kiểu tùy chỉnh để xử lý JSONB
@@ -34,12 +31,4 @@ type Wallet struct {
 	Items     StringArray `gorm:"type:jsonb;default:'[]'" json:"items"`
 	CreatedAt int64       `json:"created_at"`
 	UpdatedAt int64       `json:"updated_at"`
-}
-
-// AutoMigrate đảm bảo rằng bảng được tạo ra trong cơ sở dữ liệu
-func AutoMigrate(db *gorm.DB) {
-	err := db.AutoMigrate(&Wallet{})
-	if err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	}
 }

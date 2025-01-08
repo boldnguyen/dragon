@@ -20,6 +20,25 @@ func ConnectWallet(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Kiểm tra xem ví đã tồn tại chưa
+	var existingWallet models.Wallet
+	err := db.Where("public_key = ?", req.PublicKey).First(&existingWallet).Error
+
+	if err == nil {
+		// Ví đã tồn tại, trả về thông báo
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"wallet_id": existingWallet.ID,
+			"message":   "Wallet already connected",
+		})
+		return
+	} else if err != gorm.ErrRecordNotFound {
+		// Có lỗi trong quá trình kiểm tra
+		http.Error(w, "Failed to connect wallet", http.StatusInternalServerError)
+		return
+	}
+
+	// Tạo ví mới
 	wallet := models.Wallet{
 		UserID:    req.UserID,
 		PublicKey: req.PublicKey,
@@ -30,6 +49,7 @@ func ConnectWallet(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Trả về thành công
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"wallet_id": wallet.ID,

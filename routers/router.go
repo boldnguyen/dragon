@@ -22,5 +22,15 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 		handlers.SyncWallet(db, w, r)
 	}).Methods("GET")
 
+	// Endpoint tạo thông tin cá nhân
+	router.HandleFunc("/api/profile/create", func(w http.ResponseWriter, r *http.Request) {
+		handlers.CreateProfile(db, w, r)
+	}).Methods("POST")
+
+	// Endpoint lấy thông tin profile
+	router.HandleFunc("/api/profile/get", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetProfile(db, w, r)
+	}).Methods("GET")
+
 	return router
 }
