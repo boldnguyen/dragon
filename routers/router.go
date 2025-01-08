@@ -101,5 +101,18 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 		handlers.BuyItem(db, w, r)
 	}).Methods("POST")
 
+	// router.go
+	router.HandleFunc("/api/egg/buy", func(w http.ResponseWriter, r *http.Request) {
+		handlers.BuyEgg(db, w, r)
+	}).Methods("POST")
+
+	router.HandleFunc("/api/egg/hatch", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HatchEgg(db, w, r)
+	}).Methods("POST")
+
+	router.HandleFunc("/api/egg/complete", func(w http.ResponseWriter, r *http.Request) {
+		handlers.CompleteHatching(db, w, r)
+	}).Methods("GET")
+
 	return router
 }

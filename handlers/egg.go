@@ -1,0 +1,153 @@
+// handlers/egg.go
+package handlers
+
+import (
+	"dragon/models"
+	"encoding/json"
+	"net/http"
+	"strconv"
+	"time"
+
+	"gorm.io/gorm"
+)
+
+// HatchEggRequest là yêu cầu để ấp trứng
+type HatchEggRequest struct {
+	PlayerID int  `json:"player_id"`
+	EggID    uint `json:"egg_id"`
+	UseToken bool `json:"use_token"` // Nếu true, trứng sẽ ấp nhanh hơn và tốn token
+}
+
+func HatchEgg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	var req HatchEggRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Fetch the egg
+	var egg models.Egg
+	if err := db.First(&egg, req.EggID).Error; err != nil {
+		http.Error(w, "Egg not found", http.StatusNotFound)
+		return
+	}
+
+	// Verify player's wallet or items
+	var wallet models.Wallet
+	if err := db.Where("user_id = ?", req.PlayerID).First(&wallet).Error; err != nil {
+		http.Error(w, "Wallet not found", http.StatusNotFound)
+		return
+	}
+
+	// Check if the player has the egg
+	eggFound := false
+	for _, item := range wallet.Items {
+		if item == egg.Name {
+			eggFound = true
+			break
+		}
+	}
+
+	if !eggFound {
+		http.Error(w, "Player does not own this egg", http.StatusBadRequest)
+		return
+	}
+
+	// Calculate hatch time (if using token, speed up the process)
+	hatchTime := egg.HatchTime
+	if req.UseToken {
+		// Giả sử sử dụng token sẽ giảm thời gian ấp (ví dụ: giảm 50%)
+		hatchTime /= 2
+	}
+
+	// Ghi lại thời gian ấp trứng trong cơ sở dữ liệu hoặc hệ thống
+	hatchEndTime := time.Now().Unix() + hatchTime
+
+	// Thêm thông tin về thời gian ấp vào hệ thống (có thể lưu vào bảng `eggs` hoặc `profiles`)
+	var profile models.Profile
+	if err := db.Where("player_id = ?", req.PlayerID).First(&profile).Error; err != nil {
+		http.Error(w, "Player profile not found", http.StatusNotFound)
+		return
+	}
+
+	// Giảm số token của người chơi (nếu cần)
+	if req.UseToken {
+		if profile.TotalTokens < 10 {
+			http.Error(w, "Not enough tokens", http.StatusBadRequest)
+			return
+		}
+		profile.TotalTokens -= 10 // Giả sử ấp nhanh hơn tốn 10 token
+		if err := db.Save(&profile).Error; err != nil {
+			http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":     "Egg is hatching",
+		"hatch_time":  hatchEndTime,
+		"use_token":   req.UseToken,
+		"new_balance": profile.TotalTokens,
+	})
+}
+
+func CompleteHatching(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	playerIDStr := r.URL.Query().Get("player_id")
+
+	// Chuyển đổi playerID từ string sang int
+	playerID, err := strconv.Atoi(playerIDStr)
+	if err != nil {
+		http.Error(w, "Invalid player ID", http.StatusBadRequest)
+		return
+	}
+
+	// Tìm thông tin người chơi và trạng thái trứng
+	var profile models.Profile
+	if err := db.Where("player_id = ?", playerID).First(&profile).Error; err != nil {
+		http.Error(w, "Profile not found", http.StatusNotFound)
+		return
+	}
+
+	// Giả sử trứng nở và tạo ra một con rồng mới
+	newDragon := models.Dragon{
+		PlayerID:  playerID,     // Sử dụng playerID kiểu int
+		Name:      "DragonName", // Tạo tên ngẫu nhiên hoặc lấy từ danh sách
+		Rarity:    "Common",     // Hoặc lấy từ độ hiếm của trứng
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+
+	// Thêm con rồng vào bảng Dragon
+	if err := db.Create(&newDragon).Error; err != nil {
+		http.Error(w, "Failed to create new dragon", http.StatusInternalServerError)
+		return
+	}
+
+	// Lấy ví của người chơi và thêm rồng vào ví
+	var wallet models.Wallet
+	if err := db.Where("user_id = ?", playerID).First(&wallet).Error; err != nil {
+		http.Error(w, "Wallet not found", http.StatusNotFound)
+		return
+	}
+
+	// Thêm rồng vào ví
+	wallet.Dragons = append(wallet.Dragons, newDragon.Name)
+	if err := db.Save(&wallet).Error; err != nil {
+		http.Error(w, "Failed to update wallet", http.StatusInternalServerError)
+		return
+	}
+
+	// Cập nhật lại số lượng rồng trong Profile
+	profile.DragonsOwned++
+	if err := db.Save(&profile).Error; err != nil {
+		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "Egg hatched, new dragon acquired!",
+		"dragon":  newDragon,
+	})
+}

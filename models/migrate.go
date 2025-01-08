@@ -2,6 +2,7 @@ package models
 
 import (
 	"log"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -23,6 +24,19 @@ func SeedItems(db *gorm.DB) {
 	}
 }
 
+func SeedEggs(db *gorm.DB) {
+	eggs := []Egg{
+		{Name: "Starter Dragon Egg", Rarity: "Common", Price: 100, Currency: "GOLD", HatchTime: 300, CreatedAt: time.Now().Unix(), UpdatedAt: time.Now().Unix()},
+		{Name: "Advanced Dragon Egg", Rarity: "Rare", Price: 500, Currency: "GOLD", HatchTime: 600, CreatedAt: time.Now().Unix(), UpdatedAt: time.Now().Unix()},
+	}
+
+	for _, egg := range eggs {
+		if err := db.FirstOrCreate(&egg, Egg{Name: egg.Name}).Error; err != nil {
+			panic("Failed to seed eggs: " + err.Error())
+		}
+	}
+}
+
 // AutoMigrate thực hiện migration cho tất cả các model
 func AutoMigrate(db *gorm.DB) {
 	err := db.AutoMigrate(
@@ -35,6 +49,8 @@ func AutoMigrate(db *gorm.DB) {
 		&ChatGroupMember{},
 		&Item{},
 		&Transaction{},
+		&Egg{},
+		&Dragon{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
@@ -42,4 +58,5 @@ func AutoMigrate(db *gorm.DB) {
 
 	// Seed dữ liệu khởi tạo
 	SeedItems(db)
+	SeedEggs(db) // Gọi SeedEggs để seed trứng vào cơ sở dữ liệu
 }
