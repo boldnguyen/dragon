@@ -101,17 +101,28 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 		handlers.BuyItem(db, w, r)
 	}).Methods("POST")
 
-	// router.go
+	// Enpoint mua trứng
 	router.HandleFunc("/api/egg/buy", func(w http.ResponseWriter, r *http.Request) {
 		handlers.BuyEgg(db, w, r)
 	}).Methods("POST")
 
+	// Endpoint ấp trứng
 	router.HandleFunc("/api/egg/hatch", func(w http.ResponseWriter, r *http.Request) {
 		handlers.HatchEgg(db, w, r)
 	}).Methods("POST")
 
+	// Endpoint hoàn thành ấp trứngtrứng
 	router.HandleFunc("/api/egg/complete", func(w http.ResponseWriter, r *http.Request) {
 		handlers.CompleteHatching(db, w, r)
+	}).Methods("GET")
+
+	// Các route cho bản đồ
+	router.HandleFunc("/api/map/stages", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetStages(db, w, r)
+	}).Methods("GET")
+
+	router.HandleFunc("/api/map/stages/{id}", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetStageByID(db, w, r)
 	}).Methods("GET")
 
 	return router

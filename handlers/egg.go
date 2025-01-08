@@ -18,6 +18,7 @@ type HatchEggRequest struct {
 	UseToken bool `json:"use_token"` // Nếu true, trứng sẽ ấp nhanh hơn và tốn token
 }
 
+// HatchEgg xử lý việc ấp trứng
 func HatchEgg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	var req HatchEggRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -63,7 +64,7 @@ func HatchEgg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	// Ghi lại thời gian ấp trứng trong cơ sở dữ liệu hoặc hệ thống
 	hatchEndTime := time.Now().Unix() + hatchTime
 
-	// Thêm thông tin về thời gian ấp vào hệ thống (có thể lưu vào bảng `eggs` hoặc `profiles`)
+	// Thêm thông tin về thời gian ấp vào hệ thống
 	var profile models.Profile
 	if err := db.Where("player_id = ?", req.PlayerID).First(&profile).Error; err != nil {
 		http.Error(w, "Player profile not found", http.StatusNotFound)
@@ -83,15 +84,27 @@ func HatchEgg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Trả về kết quả thành công với định dạng JSON đẹp
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+
+	response := map[string]interface{}{
 		"message":     "Egg is hatching",
 		"hatch_time":  hatchEndTime,
 		"use_token":   req.UseToken,
 		"new_balance": profile.TotalTokens,
-	})
-}
+	}
 
+	// Sử dụng MarshalIndent để định dạng kết quả JSON
+	indentData, err := json.MarshalIndent(response, "", "  ")
+	if err != nil {
+		http.Error(w, "Error formatting JSON", http.StatusInternalServerError)
+		return
+	}
+
+	// Gửi kết quả JSON đã thụt lề ra client
+	w.Write(indentData)
+}
 func CompleteHatching(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	playerIDStr := r.URL.Query().Get("player_id")
 
@@ -145,9 +158,22 @@ func CompleteHatching(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Trả về kết quả thành công với định dạng JSON đẹp
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+
+	response := map[string]interface{}{
 		"message": "Egg hatched, new dragon acquired!",
 		"dragon":  newDragon,
-	})
+	}
+
+	// Sử dụng MarshalIndent để định dạng kết quả JSON
+	indentData, err := json.MarshalIndent(response, "", "  ")
+	if err != nil {
+		http.Error(w, "Error formatting JSON", http.StatusInternalServerError)
+		return
+	}
+
+	// Gửi kết quả JSON đã thụt lề ra client
+	w.Write(indentData)
 }

@@ -24,13 +24,25 @@ func GetItems(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		query = query.Where("category = ?", category)
 	}
 
+	// Tìm kiếm các item trong cơ sở dữ liệu
 	if err := query.Find(&items).Error; err != nil {
 		http.Error(w, "Failed to fetch items", http.StatusInternalServerError)
 		return
 	}
 
+	// Đảm bảo trả về dữ liệu ở định dạng JSON
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(items)
+
+	// Sử dụng MarshalIndent để tạo ra JSON với thụt lề
+	indentData, err := json.MarshalIndent(items, "", "  ")
+	if err != nil {
+		http.Error(w, "Error formatting JSON", http.StatusInternalServerError)
+		return
+	}
+
+	// Gửi kết quả JSON đã thụt lề ra client
+	w.Write(indentData)
 }
 
 // BuyItem xử lý việc mua đồ của người chơi
@@ -75,13 +87,25 @@ func BuyItem(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Trả về thông báo thành công
+	// Trả về thông báo thành công với dữ liệu đẹp hơn
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+
+	response := map[string]interface{}{
 		"message": "Item purchased successfully",
 		"balance": wallet.Balance,
 		"items":   wallet.Items,
-	})
+	}
+
+	// Sử dụng MarshalIndent để định dạng kết quả JSON
+	indentData, err := json.MarshalIndent(response, "", "  ")
+	if err != nil {
+		http.Error(w, "Error formatting JSON", http.StatusInternalServerError)
+		return
+	}
+
+	// Gửi kết quả JSON đã thụt lề ra client
+	w.Write(indentData)
 }
 
 // BuyEggRequest là yêu cầu để mua trứng
@@ -90,6 +114,7 @@ type BuyEggRequest struct {
 	EggID    uint `json:"egg_id"`
 }
 
+// BuyEgg xử lý việc mua trứng của người chơi
 func BuyEgg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	var req BuyEggRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -140,7 +165,6 @@ func BuyEgg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create the egg in the player's wallet (or inventory)
-	// Assuming you have a wallet that tracks owned eggs
 	var wallet models.Wallet
 	if err := db.Where("user_id = ?", req.PlayerID).First(&wallet).Error; err != nil {
 		http.Error(w, "Wallet not found", http.StatusNotFound)
@@ -153,9 +177,21 @@ func BuyEgg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Respond back
+	// Respond back with a beautiful formatted JSON response
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+
+	response := map[string]interface{}{
 		"message": "Egg purchased successfully",
-	})
+	}
+
+	// Sử dụng MarshalIndent để định dạng kết quả JSON
+	indentData, err := json.MarshalIndent(response, "", "  ")
+	if err != nil {
+		http.Error(w, "Error formatting JSON", http.StatusInternalServerError)
+		return
+	}
+
+	// Gửi kết quả JSON đã thụt lề ra client
+	w.Write(indentData)
 }

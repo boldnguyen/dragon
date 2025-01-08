@@ -37,6 +37,46 @@ func SeedEggs(db *gorm.DB) {
 	}
 }
 
+func SeedMap(db *gorm.DB) {
+	stages := []Stage{
+		{Name: "Forest", Description: "A mystical forest with many secrets"},
+		{Name: "Mountain", Description: "A high mountain with dangerous cliffs"},
+		{Name: "Desert", Description: "A vast desert with hidden treasures"},
+	}
+
+	for _, stage := range stages {
+		if err := db.FirstOrCreate(&stage, Stage{Name: stage.Name}).Error; err != nil {
+			panic("Failed to seed stages: " + err.Error())
+		}
+
+		// Thêm vòng cho mỗi stage
+		rounds := []Round{
+			{Name: "Round 1", Description: "The first challenge of the stage"},
+			{Name: "Round 2", Description: "The second challenge of the stage"},
+		}
+
+		for _, round := range rounds {
+			round.StageID = stage.ID
+			if err := db.Create(&round).Error; err != nil {
+				panic("Failed to seed rounds: " + err.Error())
+			}
+
+			// Thêm nhiệm vụ cho mỗi vòng
+			missions := []Mission{
+				{Name: "Collect 10 herbs", Description: "Find and collect 10 herbs", Reward: "50 Gold"},
+				{Name: "Defeat the monster", Description: "Defeat the monster guarding the area", Reward: "100 Gold"},
+			}
+
+			for _, mission := range missions {
+				mission.RoundID = round.ID
+				if err := db.Create(&mission).Error; err != nil {
+					panic("Failed to seed missions: " + err.Error())
+				}
+			}
+		}
+	}
+}
+
 // AutoMigrate thực hiện migration cho tất cả các model
 func AutoMigrate(db *gorm.DB) {
 	err := db.AutoMigrate(
@@ -51,6 +91,9 @@ func AutoMigrate(db *gorm.DB) {
 		&Transaction{},
 		&Egg{},
 		&Dragon{},
+		&Stage{},
+		&Round{},
+		&Mission{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
@@ -59,4 +102,5 @@ func AutoMigrate(db *gorm.DB) {
 	// Seed dữ liệu khởi tạo
 	SeedItems(db)
 	SeedEggs(db) // Gọi SeedEggs để seed trứng vào cơ sở dữ liệu
+	SeedMap(db)  // Gọi SeedMap để seed dữ liệu bản đồ vào cơ sở dữ liệu
 }
