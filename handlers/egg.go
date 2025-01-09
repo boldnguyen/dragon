@@ -4,6 +4,7 @@ package handlers
 import (
 	"dragon/models"
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -105,6 +106,23 @@ func HatchEgg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	// Gửi kết quả JSON đã thụt lề ra client
 	w.Write(indentData)
 }
+
+// Helper function để tạo tên rồng ngẫu nhiên
+func generateRandomDragonName() string {
+	names := []string{"Firestorm", "Thunderstrike", "Frostbite", "Blazewing", "Shadowflame", "Stoneheart"}
+	rand.Seed(time.Now().UnixNano())
+	return names[rand.Intn(len(names))]
+}
+
+// Helper function để tạo giá trị ngẫu nhiên cho sức mạnh tấn công và phòng thủ
+func generateRandomAttributes() (int, int) {
+	// Random attack power between 5 and 20
+	attack := rand.Intn(16) + 5
+	// Random defense power between 3 and 15
+	defense := rand.Intn(13) + 3
+	return attack, defense
+}
+
 func CompleteHatching(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	playerIDStr := r.URL.Query().Get("player_id")
 
@@ -122,11 +140,17 @@ func CompleteHatching(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Giả sử trứng nở và tạo ra một con rồng mới
+	// Tạo một con rồng ngẫu nhiên
+	dragonName := generateRandomDragonName()
+	attack, defense := generateRandomAttributes()
+
 	newDragon := models.Dragon{
-		PlayerID:  playerID,     // Sử dụng playerID kiểu int
-		Name:      "DragonName", // Tạo tên ngẫu nhiên hoặc lấy từ danh sách
-		Rarity:    "Common",     // Hoặc lấy từ độ hiếm của trứng
+		PlayerID:  playerID,   // Sử dụng playerID kiểu int
+		Name:      dragonName, // Tạo tên ngẫu nhiên
+		Rarity:    "Common",   // Hoặc tính độ hiếm ngẫu nhiên nếu cần
+		Level:     1,          // Mặc định rồng mới ở cấp độ 1
+		Attack:    attack,     // Sức mạnh tấn công ngẫu nhiên
+		Defense:   defense,    // Sức mạnh phòng thủ ngẫu nhiên
 		CreatedAt: time.Now().Unix(),
 		UpdatedAt: time.Now().Unix(),
 	}

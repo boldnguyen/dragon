@@ -138,5 +138,10 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 		handlers.PurchaseItem(db, w, r) // Mua vật phẩm
 	}).Methods("POST")
 
+	// Endpoint chiến đấu với đối thủ AI
+	router.HandleFunc("/api/pve/fight", func(w http.ResponseWriter, r *http.Request) {
+		handlers.FightEnemy(db, w, r)
+	}).Methods("POST")
+
 	return router
 }

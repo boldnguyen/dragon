@@ -10,6 +10,7 @@ type Profile struct {
 	Losses       int     `json:"losses"`
 	DragonsOwned int     `json:"dragons_owned"`
 	TotalTokens  float64 `json:"total_tokens"`
+	Experience   int     `json:"experience"` // Thêm trường kinh nghiệm
 	CreatedAt    int64   `json:"created_at"`
 	UpdatedAt    int64   `json:"updated_at"`
 }
