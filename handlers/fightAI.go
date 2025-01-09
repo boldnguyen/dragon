@@ -74,7 +74,17 @@ func FightEnemy(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		profile.Losses++
 	}
 
-	// Cập nhật profile
+	// Kiểm tra xem người chơi có đủ kinh nghiệm để nâng cấp con rồng không
+	// Mỗi cấp độ rồng yêu cầu 200 kinh nghiệm (tùy chỉnh giá trị này nếu cần)
+	if profile.Experience >= dragon.Level*200 {
+		dragon.Level++ // Nâng cấp cấp độ của rồng
+		if err := db.Save(&dragon).Error; err != nil {
+			http.Error(w, "Failed to update dragon level", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Cập nhật profile người chơi
 	if err := db.Save(&profile).Error; err != nil {
 		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
 		return
@@ -88,6 +98,7 @@ func FightEnemy(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		"player_tokens": profile.TotalTokens,
 		"enemy":         enemy.Name,
 		"reward":        enemy.Reward,
+		"dragon_level":  dragon.Level, // Trả về cấp độ của rồng
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
