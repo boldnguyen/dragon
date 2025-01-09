@@ -125,5 +125,18 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 		handlers.GetStageByID(db, w, r)
 	}).Methods("GET")
 
+	// Các route cho Marketplace
+	router.HandleFunc("/api/marketplace/listings", func(w http.ResponseWriter, r *http.Request) {
+		handlers.CreateMarketplaceListing(db, w, r) // Đăng bán vật phẩm
+	}).Methods("POST")
+
+	router.HandleFunc("/api/marketplace/listings", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetMarketplaceListings(db, w, r) // Xem danh sách vật phẩm rao bán
+	}).Methods("GET")
+
+	router.HandleFunc("/api/marketplace/listings/{id}/purchase", func(w http.ResponseWriter, r *http.Request) {
+		handlers.PurchaseItem(db, w, r) // Mua vật phẩm
+	}).Methods("POST")
+
 	return router
 }
