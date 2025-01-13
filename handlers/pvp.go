@@ -59,17 +59,48 @@ func PvPMatchHandler(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	player1Strength := dragon1.Attack - dragon1.Defense
 	player2Strength := dragon2.Attack - dragon2.Defense
 
+	// Kiểm tra nếu trận đấu hòa
+	if player1Strength == player2Strength {
+		player1.TotalTokens += req.BetAmount
+		player2.TotalTokens += req.BetAmount
+		tx := db.Begin()
+		defer func() {
+			if r := recover(); r != nil {
+				tx.Rollback()
+			}
+		}()
+
+		// Hoàn lại token cho cả hai người chơi
+		if err := tx.Model(&models.Profile{}).Where("player_id = ?", player1.PlayerID).Update("total_tokens", player1.TotalTokens).Error; err != nil {
+			tx.Rollback()
+			http.Error(w, "Failed to refund tokens for player1", http.StatusInternalServerError)
+			return
+		}
+		if err := tx.Model(&models.Profile{}).Where("player_id = ?", player2.PlayerID).Update("total_tokens", player2.TotalTokens).Error; err != nil {
+			tx.Rollback()
+			http.Error(w, "Failed to refund tokens for player2", http.StatusInternalServerError)
+			return
+		}
+
+		tx.Commit()
+
+		// Trả về kết quả hòa
+		response := map[string]interface{}{
+			"message": "It's a draw",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
 	var winner *models.Profile
 	var loser *models.Profile
 	if player1Strength > player2Strength {
 		winner = &player1
 		loser = &player2
-	} else if player1Strength < player2Strength {
+	} else {
 		winner = &player2
 		loser = &player1
-	} else {
-		http.Error(w, "It's a draw", http.StatusOK)
-		return
 	}
 
 	// Cập nhật token và lưu kết quả
