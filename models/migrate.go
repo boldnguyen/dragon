@@ -90,6 +90,20 @@ func SeedEnemies(db *gorm.DB) {
 	}
 }
 
+func SeedBosses(db *gorm.DB) {
+	bosses := []Boss{
+		{Name: "Dragon King", Health: 1000, Attack: 100, Defense: 50, Special: "Fire Breath", Level: 10, Reward: "Special Dragon Egg"},
+		{Name: "Forest Guardian", Health: 800, Attack: 80, Defense: 40, Special: "Vine Trap", Level: 8, Reward: "Rare Item"},
+		// Thêm các boss khác nếu cần
+	}
+
+	for _, boss := range bosses {
+		if err := db.FirstOrCreate(&boss, Boss{Name: boss.Name}).Error; err != nil {
+			panic("Failed to seed bosses: " + err.Error())
+		}
+	}
+}
+
 // AutoMigrate thực hiện migration cho tất cả các model
 func AutoMigrate(db *gorm.DB) {
 	err := db.AutoMigrate(
@@ -110,6 +124,7 @@ func AutoMigrate(db *gorm.DB) {
 		&MarketplaceListing{},
 		&Enemy{},
 		&PvPMatch{},
+		&Boss{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
@@ -120,4 +135,6 @@ func AutoMigrate(db *gorm.DB) {
 	SeedEggs(db)    // Gọi SeedEggs để seed trứng vào cơ sở dữ liệu
 	SeedMap(db)     // Gọi SeedMap để seed dữ liệu bản đồ vào cơ sở dữ liệu
 	SeedEnemies(db) // Seed dữ liệu đối thủ vào cơ sở dữ liệu
+	SeedBosses(db)  // Seed dữ liệu boss vào cơ sở dữ liệu
+
 }

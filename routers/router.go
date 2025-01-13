@@ -147,5 +147,16 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/api/pvp/match", func(w http.ResponseWriter, r *http.Request) {
 		handlers.PvPMatchHandler(db, w, r)
 	}).Methods("POST")
+
+	// Endpoint chiến đấu với boss
+	router.HandleFunc("/api/boss/fight", func(w http.ResponseWriter, r *http.Request) {
+		handlers.FightBoss(db, w, r)
+	}).Methods("POST")
+
+	// Enpoint cho Co_op
+	router.HandleFunc("/api/boss/coop", func(w http.ResponseWriter, r *http.Request) {
+		handlers.FightBossCoop(db, w, r)
+	}).Methods("POST")
+
 	return router
 }

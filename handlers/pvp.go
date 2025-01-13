@@ -143,21 +143,33 @@ func PvPMatchHandler(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	tx.Commit()
 
-	// Trả về kết quả
+	// Trả về kết quả với thông tin chi tiết
 	response := map[string]interface{}{
-		"message":    "PvP match completed",
-		"winner_id":  winner.PlayerID,
-		"loser_id":   loser.PlayerID,
-		"reward":     reward,
-		"player1_id": player1.PlayerID,
-		"player2_id": player2.PlayerID,
-		"player1_dragon": map[string]interface{}{
-			"id":    dragon1.ID,
-			"level": dragon1.Level,
+		"message":   "PvP match completed",
+		"winner_id": winner.PlayerID,
+		"loser_id":  loser.PlayerID,
+		"reward":    reward,
+		"player1": map[string]interface{}{
+			"player_id":    player1.PlayerID,
+			"total_tokens": player1.TotalTokens,
+			"dragon": map[string]interface{}{
+				"id":       dragon1.ID,
+				"level":    dragon1.Level,
+				"attack":   dragon1.Attack,
+				"defense":  dragon1.Defense,
+				"strength": player1Strength,
+			},
 		},
-		"player2_dragon": map[string]interface{}{
-			"id":    dragon2.ID,
-			"level": dragon2.Level,
+		"player2": map[string]interface{}{
+			"player_id":    player2.PlayerID,
+			"total_tokens": player2.TotalTokens,
+			"dragon": map[string]interface{}{
+				"id":       dragon2.ID,
+				"level":    dragon2.Level,
+				"attack":   dragon2.Attack,
+				"defense":  dragon2.Defense,
+				"strength": player2Strength,
+			},
 		},
 	}
 	w.Header().Set("Content-Type", "application/json")

@@ -62,6 +62,10 @@ func FightEnemy(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		for dragon.Experience >= dragon.Level*200 {
 			dragon.Experience -= dragon.Level * 200
 			dragon.Level++
+
+			// Tăng cường các chỉ số của rồng khi lên cấp
+			dragon.Attack += 10 // Tăng điểm tấn công
+			dragon.Defense += 5 // Tăng điểm phòng thủ
 		}
 
 		// Lưu thông tin cập nhật của rồng
@@ -90,6 +94,8 @@ func FightEnemy(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		"reward":            enemy.Reward,
 		"dragon_level":      dragon.Level,
 		"dragon_experience": dragon.Experience,
+		"dragon_attack":     dragon.Attack,
+		"dragon_defense":    dragon.Defense,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

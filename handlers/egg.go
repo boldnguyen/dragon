@@ -3,7 +3,6 @@ package handlers
 import (
 	"dragon/models"
 	"encoding/json"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -106,48 +105,6 @@ func HatchEgg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	w.Write(indentData)
 }
 
-// Helper function để tạo tên rồng ngẫu nhiên
-func generateRandomDragonName() string {
-	names := []string{"Firestorm", "Thunderstrike", "Frostbite", "Blazewing", "Shadowflame", "Stoneheart"}
-	rand.Seed(time.Now().UnixNano())
-	return names[rand.Intn(len(names))]
-}
-
-// Helper function để tạo giá trị ngẫu nhiên cho sức mạnh tấn công và phòng thủ
-func generateRandomAttributes(rarity string) (int, int) {
-	// Random attack power between 5 and 20
-	var attack int
-	var defense int
-
-	// Random attack and defense based on rarity
-	switch rarity {
-	case "Common":
-		attack = rand.Intn(10) + 5
-		defense = rand.Intn(6) + 3
-	case "Uncommon":
-		attack = rand.Intn(15) + 10
-		defense = rand.Intn(8) + 5
-	case "Rare":
-		attack = rand.Intn(20) + 15
-		defense = rand.Intn(10) + 7
-	case "Epic":
-		attack = rand.Intn(25) + 20
-		defense = rand.Intn(12) + 9
-	case "Legendary":
-		attack = rand.Intn(30) + 25
-		defense = rand.Intn(15) + 12
-	}
-
-	return attack, defense
-}
-
-// Helper function để chọn độ hiếm ngẫu nhiên
-func generateRandomRarity() string {
-	rareTypes := []string{"Common", "Uncommon", "Rare", "Epic", "Legendary"}
-	rand.Seed(time.Now().UnixNano())
-	return rareTypes[rand.Intn(len(rareTypes))]
-}
-
 func CompleteHatching(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	playerIDStr := r.URL.Query().Get("player_id")
 
@@ -227,4 +184,3 @@ func CompleteHatching(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	// Gửi kết quả JSON đã thụt lề ra client
 	w.Write(indentData)
 }
-
