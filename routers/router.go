@@ -143,5 +143,9 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 		handlers.FightEnemy(db, w, r)
 	}).Methods("POST")
 
+	// Endpoint chế độ PvP
+	router.HandleFunc("/api/pvp/match", func(w http.ResponseWriter, r *http.Request) {
+		handlers.PvPMatchHandler(db, w, r)
+	}).Methods("POST")
 	return router
 }

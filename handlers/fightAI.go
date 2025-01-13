@@ -9,11 +9,9 @@ import (
 )
 
 type PvERequest struct {
-	PlayerID    int    `json:"player_id"`
-	DragonLevel int    `json:"dragon_level"`
-	EnemyID     int    `json:"enemy_id"`
-	DragonID    uint   `json:"dragon_id,omitempty"`   // Hoặc dùng DragonName nếu cần
-	DragonName  string `json:"dragon_name,omitempty"` // Dùng để chỉ định con rồng
+	PlayerID int  `json:"player_id"`
+	EnemyID  int  `json:"enemy_id"`
+	DragonID uint `json:"dragon_id"` // ID rồng cần được cung cấp rõ ràng
 }
 
 func FightEnemy(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -30,22 +28,10 @@ func FightEnemy(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Tìm con rồng mà người chơi chọn
+	// Tìm con rồng mà người chơi chọn dựa vào DragonID
 	var dragon models.Dragon
-	if req.DragonID != 0 {
-		// Nếu có DragonID, tìm rồng theo ID
-		if err := db.Where("id = ? AND player_id = ?", req.DragonID, req.PlayerID).First(&dragon).Error; err != nil {
-			http.Error(w, "Dragon not found", http.StatusNotFound)
-			return
-		}
-	} else if req.DragonName != "" {
-		// Nếu có DragonName, tìm rồng theo tên
-		if err := db.Where("name = ? AND player_id = ?", req.DragonName, req.PlayerID).First(&dragon).Error; err != nil {
-			http.Error(w, "Dragon not found", http.StatusNotFound)
-			return
-		}
-	} else {
-		http.Error(w, "Dragon ID or name must be provided", http.StatusBadRequest)
+	if err := db.Where("id = ? AND player_id = ?", req.DragonID, req.PlayerID).First(&dragon).Error; err != nil {
+		http.Error(w, "Dragon not found", http.StatusNotFound)
 		return
 	}
 
@@ -67,21 +53,25 @@ func FightEnemy(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if playerPower > enemyPower {
 		win = true
 		profile.Wins++
-		profile.Experience += 100
 		profile.TotalTokens += 50
-	} else {
-		win = false
-		profile.Losses++
-	}
 
-	// Kiểm tra xem người chơi có đủ kinh nghiệm để nâng cấp con rồng không
-	// Mỗi cấp độ rồng yêu cầu 200 kinh nghiệm (tùy chỉnh giá trị này nếu cần)
-	if profile.Experience >= dragon.Level*200 {
-		dragon.Level++ // Nâng cấp cấp độ của rồng
+		// Thêm kinh nghiệm cho rồng
+		dragon.Experience += 100
+
+		// Kiểm tra và nâng cấp cấp độ của rồng nếu đạt đủ kinh nghiệm
+		for dragon.Experience >= dragon.Level*200 {
+			dragon.Experience -= dragon.Level * 200
+			dragon.Level++
+		}
+
+		// Lưu thông tin cập nhật của rồng
 		if err := db.Save(&dragon).Error; err != nil {
 			http.Error(w, "Failed to update dragon level", http.StatusInternalServerError)
 			return
 		}
+	} else {
+		win = false
+		profile.Losses++
 	}
 
 	// Cập nhật profile người chơi
@@ -92,13 +82,14 @@ func FightEnemy(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	// Trả về kết quả trận đấu
 	response := map[string]interface{}{
-		"message":       "Battle completed",
-		"win":           win,
-		"player_exp":    profile.Experience,
-		"player_tokens": profile.TotalTokens,
-		"enemy":         enemy.Name,
-		"reward":        enemy.Reward,
-		"dragon_level":  dragon.Level, // Trả về cấp độ của rồng
+		"message":           "Battle completed",
+		"win":               win,
+		"player_exp":        profile.Experience,
+		"player_tokens":     profile.TotalTokens,
+		"enemy":             enemy.Name,
+		"reward":            enemy.Reward,
+		"dragon_level":      dragon.Level,
+		"dragon_experience": dragon.Experience,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
