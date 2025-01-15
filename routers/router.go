@@ -158,5 +158,10 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 		handlers.FightBossCoop(db, w, r)
 	}).Methods("POST")
 
+	// Endpoint bắt đầu huấn luyện
+	router.HandleFunc("/api/training/start", func(w http.ResponseWriter, r *http.Request) {
+		handlers.StartTraining(db, w, r)
+	}).Methods("POST")
+
 	return router
 }

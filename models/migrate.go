@@ -125,6 +125,7 @@ func AutoMigrate(db *gorm.DB) {
 		&Enemy{},
 		&PvPMatch{},
 		&Boss{},
+		&Training{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
