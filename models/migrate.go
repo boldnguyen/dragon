@@ -127,6 +127,10 @@ func AutoMigrate(db *gorm.DB) {
 		&Boss{},
 		&Training{},
 		&Breeding{},
+		&Clan{},
+		&ClanMember{},
+		&ClanTask{},
+		&ClanChat{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)

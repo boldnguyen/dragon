@@ -173,5 +173,35 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 		handlers.CompleteBreeding(db, w, r)
 	}).Methods("POST")
 
+	// Endpoint tạo clan
+	router.HandleFunc("/api/clan/create", func(w http.ResponseWriter, r *http.Request) {
+		handlers.CreateClan(db, w, r)
+	}).Methods("POST")
+
+	// Endpoint tham gia clan
+	router.HandleFunc("/api/clan/join", func(w http.ResponseWriter, r *http.Request) {
+		handlers.JoinClan(db, w, r)
+	}).Methods("POST")
+
+	// Endpoint lấy thông tin clan
+	router.HandleFunc("/api/clan/info", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetClanInfo(db, w, r)
+	}).Methods("GET")
+
+	// Endpoint chat trong clan
+	router.HandleFunc("/api/clan/chat", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ClanChat(db, w, r)
+	}).Methods("POST")
+
+	// Endpoint xếp hạng clan
+	router.HandleFunc("/api/clan/ranking", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetClanRanking(db, w, r)
+	}).Methods("GET")
+
+	// Endpoint thực hiện nhiệm vụ clan
+	router.HandleFunc("/api/clan/task", func(w http.ResponseWriter, r *http.Request) {
+		handlers.CompleteClanTask(db, w, r)
+	}).Methods("POST")
+
 	return router
 }
