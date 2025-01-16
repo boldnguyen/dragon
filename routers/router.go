@@ -163,5 +163,15 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 		handlers.StartTraining(db, w, r)
 	}).Methods("POST")
 
+	// Endpoint bắt đầu lai tạo
+	router.HandleFunc("/api/breeding/start", func(w http.ResponseWriter, r *http.Request) {
+		handlers.StartBreeding(db, w, r)
+	}).Methods("POST")
+
+	// Endpoint hoàn thành lai tạo
+	router.HandleFunc("/api/breeding/complete", func(w http.ResponseWriter, r *http.Request) {
+		handlers.CompleteBreeding(db, w, r)
+	}).Methods("POST")
+
 	return router
 }
